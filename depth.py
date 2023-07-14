@@ -15,13 +15,11 @@ def calculate_depth(x, y, disp):
 
 def find_depths(results, disp):
     new_results = []
-    for info in results:
-        parameters = info.boxes
-        for box in parameters:
-            x1, y1, x2, y2 = box.xyxy[0]
-            x_avg = int((x1+x2)/2)
-            y_avg = int((y1+y2)/2)
+    for box, class_detect in results:
+        x1, y1, x2, y2 = box.xyxy[0]
+        x_avg = int((x1+x2)/2)
+        y_avg = int((y1+y2)/2)
 
-            depth = calculate_depth(x_avg, y_avg, disp)
-            new_results.append([box, depth])
+        depth = calculate_depth(x_avg, y_avg, disp)
+        new_results.append([box, depth, class_detect])
     return new_results

@@ -54,14 +54,13 @@ def calculate_distance(x1, x2, d1, d2):
 
 def find_lane_point_for_objects(objects, lanes_with_depth):
     lines = []
-    for box, depth in objects:
+    for box, depth, class_name in objects:
         x1, y1, x2, y2 = box.xyxy[0]
 
         bottom_center_x = (x1+x2)//2
         bottom_center_y = int(y2.cpu())
 
         horizontal_points = []
-        class_name = box.class_detect
 
         if (class_name not in ['bicycle', 'car', 'dog', 'motorbike', 'person', 'three wheeler', 'vehicle']):
             for lane in lanes_with_depth:

@@ -16,22 +16,24 @@ class ObjectDetector:
     def predict_objects(self, image):
         results = self.model.predict(image, agnostic_nms=True)
 
+        new_results = []
+
         for info in results:
             parameters = info.boxes
             for box in parameters:
                 class_detect = self.model.names[int(box.cls[0])]
-                box.class_detect = class_detect
-        return results
+                new_results.append([box, class_detect])
+
+        return new_results
 
     @staticmethod
     def draw_objects(old_frame, results):
         frame = old_frame.copy()
         annotator = Annotator(frame, 4, 4)
-        for box, distance in results:
+        for box, distance, class_detect in results:
             x1, y1, x2, y2 = box.xyxy[0]
             confidence = box.conf[0]
             conf = math.ceil(confidence * 100)
-            class_detect = box.class_detect
             if conf >= 0:
                 x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
                 color = [int(c) for c in colors[int(box.cls[0])]]
