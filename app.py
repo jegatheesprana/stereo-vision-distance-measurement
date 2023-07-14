@@ -2,12 +2,22 @@ import cv2
 
 from disparity import find_disparity
 from depth import find_depths
-from lane_utils import detect_lanes, draw_lanes, find_depth_for_lanes, find_lane_point_for_objects
-from object_utils import predict_objects, draw_objects
+from lane_utils import LaneDetector, find_depth_for_lanes, find_lane_point_for_objects
+from object_detector import ObjectDetector
 from distance import plot_distance
 
 
-def process_image(img):
+class Process:
+    def __init__(self, calibration_path, yolo_model_path, lane_detection_model_path):
+        self.calibration_path = calibration_path
+        self.yolo_model_path = yolo_model_path
+        self.lane_detection_model_path = lane_detection_model_path
+
+        self.objectDetector = ObjectDetector(yolo_model_path)
+        self.laneDetector = LaneDetector(lane_detection_model_path)
+
+
+def process_image(self, img):
     height, width, channels = img.shape
 
     frame_left = img[0:height, 0:int(width/2)]
@@ -18,24 +28,27 @@ def process_image(img):
 
     rectified_frame, filt_Color, disp = find_disparity(frame_left, frame_right)
 
-    objects = predict_objects(rectified_frame)
+    objects = self.objectDetector.predict_objects(rectified_frame)
 
     objects_with_dept = find_depths(objects, disp)
 
     # Lane detection
 
-    lanes_points, lanes_detected = detect_lanes(rectified_frame)
+    lanes_points, lanes_detected = self.laneDetector.detect_lanes(
+        rectified_frame)
     lanes_with_depth = find_depth_for_lanes(lanes_points, lanes_detected, disp)
 
     # Nearest Point calculation
 
     lines = find_lane_point_for_objects(objects_with_dept, lanes_with_depth)
 
-    with_lane = draw_lanes(rectified_frame, lanes_points, lanes_detected)
+    with_lane = self.laneDetector.draw_lanes(
+        rectified_frame, lanes_points, lanes_detected)
 
     with_lane = cv2.resize(with_lane, (1280, 960))
 
-    with_objects = draw_objects(with_lane, objects_with_dept)
+    with_objects = self.objectDetector.draw_objects(
+        with_lane, objects_with_dept)
 
     with_distance = plot_distance(with_objects, lines)
 

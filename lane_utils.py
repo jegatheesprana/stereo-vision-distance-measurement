@@ -2,34 +2,34 @@ from ultrafastLaneDetector import UltrafastLaneDetector, ModelType
 import numpy as np
 from depth import calculate_depth
 
-lane_model_path = "/content/drive/Shareddrives/FYP/Source_codes/lane_detection/tusimple_18.pth"
-lane_model_type = ModelType.TUSIMPLE
-use_gpu = True
 
-# Initialize lane detection model
-lane_detector = UltrafastLaneDetector(
-    lane_model_path, lane_model_type, use_gpu)
+class LaneDetector:
+    def __init__(self, lane_model_path="/content/drive/Shareddrives/FYP/Source_codes/lane_detection/tusimple_18.pth"):
+        lane_model_type = ModelType.TUSIMPLE
+        use_gpu = True
 
+        # Initialize lane detection model
+        self.lane_detector = UltrafastLaneDetector(
+            lane_model_path, lane_model_type, use_gpu)
 
-def detect_lanes(image):
-    input_tensor = lane_detector.prepare_input(image)
+    def detect_lanes(self, image):
+        input_tensor = self.lane_detector.prepare_input(image)
 
-    # Perform inference on the image
-    output = lane_detector.inference(input_tensor)
+        # Perform inference on the image
+        output = self.lane_detector.inference(input_tensor)
 
-    # Process output data
-    lanes_points, lanes_detected = lane_detector.process_output(
-        output, lane_detector.cfg)
+        # Process output data
+        lanes_points, lanes_detected = self.lane_detector.process_output(
+            output, self.lane_detector.cfg)
 
-    return lanes_points, lanes_detected
+        return lanes_points, lanes_detected
 
+    def draw_lanes(self, input_img, lanes_points, lanes_detected):
+        # Draw depth image
+        visualization_img = self.lane_detector.draw_lanes(
+            input_img, lanes_points, lanes_detected, self.lane_detector.cfg, True)
 
-def draw_lanes(input_img, lanes_points, lanes_detected):
-    # Draw depth image
-    visualization_img = lane_detector.draw_lanes(
-        input_img, lanes_points, lanes_detected, lane_detector.cfg, True)
-
-    return visualization_img
+        return visualization_img
 
 
 def find_depth_for_lanes(lanes_points, lanes_detected, disp):
