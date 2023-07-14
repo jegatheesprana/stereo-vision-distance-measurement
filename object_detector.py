@@ -23,7 +23,8 @@ class ObjectDetector:
                 box.class_detect = class_detect
         return results
 
-    def draw_objects(self, old_frame, results):
+    @staticmethod
+    def draw_objects(old_frame, results):
         frame = old_frame.copy()
         annotator = Annotator(frame, 4, 4)
         for box, distance in results:
