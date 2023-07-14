@@ -16,40 +16,42 @@ class Process:
         self.objectDetector = ObjectDetector(yolo_model_path)
         self.laneDetector = LaneDetector(lane_detection_model_path)
 
+    def process_image(self, img):
+        height, width, channels = img.shape
 
-def process_image(self, img):
-    height, width, channels = img.shape
+        frame_left = img[0:height, 0:int(width/2)]
+        frame_right = img[0:height, int(width/2):width+1]
 
-    frame_left = img[0:height, 0:int(width/2)]
-    frame_right = img[0:height, int(width/2):width+1]
+        # Hit "q" to close the window
+        # if cv2.waitKey(1) & 0xFF == ord('a'):
 
-    # Hit "q" to close the window
-    # if cv2.waitKey(1) & 0xFF == ord('a'):
+        rectified_frame, filt_Color, disp = find_disparity(
+            frame_left, frame_right)
 
-    rectified_frame, filt_Color, disp = find_disparity(frame_left, frame_right)
+        objects = self.objectDetector.predict_objects(rectified_frame)
 
-    objects = self.objectDetector.predict_objects(rectified_frame)
+        objects_with_dept = find_depths(objects, disp)
 
-    objects_with_dept = find_depths(objects, disp)
+        # Lane detection
 
-    # Lane detection
+        lanes_points, lanes_detected = self.laneDetector.detect_lanes(
+            rectified_frame)
+        lanes_with_depth = find_depth_for_lanes(
+            lanes_points, lanes_detected, disp)
 
-    lanes_points, lanes_detected = self.laneDetector.detect_lanes(
-        rectified_frame)
-    lanes_with_depth = find_depth_for_lanes(lanes_points, lanes_detected, disp)
+        # Nearest Point calculation
 
-    # Nearest Point calculation
+        lines = find_lane_point_for_objects(
+            objects_with_dept, lanes_with_depth)
 
-    lines = find_lane_point_for_objects(objects_with_dept, lanes_with_depth)
+        with_lane = self.laneDetector.draw_lanes(
+            rectified_frame, lanes_points, lanes_detected)
 
-    with_lane = self.laneDetector.draw_lanes(
-        rectified_frame, lanes_points, lanes_detected)
+        with_lane = cv2.resize(with_lane, (1280, 960))
 
-    with_lane = cv2.resize(with_lane, (1280, 960))
+        with_objects = self.objectDetector.draw_objects(
+            with_lane, objects_with_dept)
 
-    with_objects = self.objectDetector.draw_objects(
-        with_lane, objects_with_dept)
+        with_distance = plot_distance(with_objects, lines)
 
-    with_distance = plot_distance(with_objects, lines)
-
-    return with_distance
+        return with_distance
